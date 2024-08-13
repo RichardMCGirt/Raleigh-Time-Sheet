@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Time-Off Request Form</title>
+    <link rel="stylesheet" href="timeoff.css">
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <a href="timesheet.html">
+                <img src="vanir logo.png" alt="Vanir Installed Sales Logo" class="logo">
+            </a>        </div>
+            <h3>Time-Off Request Form</h3>
+        <div class="header-right">
+            <div class="user-info">
+                <span id="user-email" class="clickable">example@example.com</span>
+                <a href="#" id="logout-button" class="logout-button">Logout</a>
+            </div>
+        </div>
+    </header>
+
+   
+    <nav class="navbar">
+        <ul>
+            <li><a href="timesheet.html">Time sheet entry</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <form id="timeOffForm">
+            <label for="employeeName">Employee Name</label>
+            <input type="text" id="employeeName" name="employeeName" disabled >
+
+            <label for="startDate">Start Date</label>
+            <input type="date" id="startDate" name="startDate" required>
+
+            <label for="startTime">Start Time [double click for all day]</label>
+            <input type="time" id="startTime" name="startTime" >
+
+            <label for="endDate">End Date</label>
+            <input type="date" id="endDate" name="endDate" required>
+
+            <label for="endTime">End Time</label>
+            <input type="time" id="endTime" name="endTime" >
+            <div id="submissionStatus" class="hidden"></div>
+
+             
+            <button id="submitButton" type="submit">Submit</button>
+        </form>
+    </div>
+    <div id="previousRequests" class="container">
+        <h2>Previous Requests</h2>
+        <ul id="requestsList"></ul>
+    </div>
+    <script src="timeoff.js"></script>
+    <div id="script-placeholder"></div>
+    <script src="disable-script.js"></script>
+</body>
+</html>

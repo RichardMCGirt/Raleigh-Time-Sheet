@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supervisor Portal</title>
+    <link rel="stylesheet" href="approvetimeoff.css">
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <a href="timesheet.html">
+                <img src="vanir logo.png" alt="Vanir Installed Sales Logo" class="logo">
+            </a>
+                </div>
+                <h3>Supervisor Portal</h3>
+
+        <div class="header-right">
+            <div class="user-info">
+                <span id="user-email" class="clickable">example@example.com</span>
+                <a href="#" id="logout-button" class="logout-button">Logout</a>
+            </div>
+        </div>
+        <br>
+    </header>
+    <nav class="navbar">
+        <ul>
+            <li><a href="supervisor.html">Approve Timesheet </a></li>
+
+        </ul>
+        </nav>
+    <h1>Approve Time Off</h1>
+    <button id="refresh-button">Refresh</button>
+    <p id="instructions">Please review the time off requests below. Check the box to approve a request or select a denial reason from the dropdown. If you select "Other" as the reason, please enter a reason in the provided input field.</p>
+
+    <div id="requests-container">
+        <!-- Time-off requests will be dynamically loaded here -->
+    </div>
+    <div id="notification" class="notification">Record saved successfully!</div>
+
+    <script src="approvetimeoff.js"></script>
+    <script src="huntergong.js"></script>
+
+    <div id="script-placeholder"></div>
+    <script src="disable-script.js"></script>
+</body>
+</html>
