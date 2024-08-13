@@ -168,19 +168,23 @@ document.addEventListener('DOMContentLoaded', function () {
     const passwordInput = document.getElementById('password');
     const togglePasswordButton = document.getElementById('togglePassword');
 
-    const minWidth = emailInput.style.minWidth;
+    // Get the computed minWidth of emailInput
+    const minWidth = window.getComputedStyle(emailInput).minWidth;
     const minWidthValue = parseInt(minWidth, 10);
 
-    function adjustWidth() {
+    function adjustEmailWidth() {
+        // Calculate the new width based on email input value length
         const newWidth = ((emailInput.value.length + 1) * 8) + 'px';
+        // Apply the width only if it's greater than the minimum width
         emailInput.style.width = (parseInt(newWidth, 10) < minWidthValue) ? minWidth : newWidth;
     }
 
-    adjustWidth(); // Initial width based on default value
+    adjustEmailWidth(); // Set initial width based on default value
 
-    emailInput.addEventListener('input', adjustWidth);
+    emailInput.addEventListener('input', adjustEmailWidth);
 
     togglePasswordButton.addEventListener('click', function () {
+        // Toggle password visibility
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
             togglePasswordButton.textContent = 'Hide';
@@ -190,6 +194,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+
 
 function toggleMusic() {
     const backgroundMusic = document.getElementById('backgroundMusic');
