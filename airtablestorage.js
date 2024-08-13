@@ -106,11 +106,12 @@ document.addEventListener("DOMContentLoaded", function() {
             const recordId = searchData.records[0].id;
             console.log('Existing record found with ID:', recordId);
     
-            // Make sure `record` is properly defined
+            // Exclude the email field from the record object
+            const { email, ...dataWithoutEmail } = data;
+    
             const record = {
                 fields: {
-                    ...data,
-                    "email": userEmail
+                    ...dataWithoutEmail
                 }
             };
     
@@ -138,6 +139,8 @@ document.addEventListener("DOMContentLoaded", function() {
             throw error;
         }
     }
+    
+    
     
 
     document.getElementById('clear-button').addEventListener('click', async () => {
