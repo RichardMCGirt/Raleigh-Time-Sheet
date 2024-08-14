@@ -142,6 +142,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     
     
+    
 
     document.getElementById('clear-button').addEventListener('click', async () => {
         const userConfirmed = await showModal();
@@ -196,13 +197,12 @@ document.addEventListener("DOMContentLoaded", function() {
             const recordId = searchData.records[0].id;
             console.log('Existing record found with ID:', recordId);
     
-            // Make sure `record` is properly defined
+            // Prepare a record with null values, excluding the email field
             const record = {
                 fields: {
                     ...Object.fromEntries(
                         Object.keys(gatherFormData()).map(key => [key, null])
-                    ),
-                    "email": userEmail
+                    )
                 }
             };
     
@@ -230,6 +230,7 @@ document.addEventListener("DOMContentLoaded", function() {
             throw error;
         }
     }
+    
     
     
     function resetFormFields() {
