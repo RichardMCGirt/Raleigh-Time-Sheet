@@ -341,46 +341,43 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     async function handleWeekEndingChange() {
         console.log('Handling week-ending date change...');
-        
-        // Get the current date
-        const today = new Date();
-        const currentDay = today.getDay();
+        const selectedDate = new Date(elements.weekEndingInput.value);
+        const nextTuesday = getNextTuesday(selectedDate); // Get the next Tuesday based on the selected date
+        elements.weekEndingInput.value = nextTuesday.toISOString().split('T')[0];
+        console.log('Adjusted week-ending date:', nextTuesday);
     
-        // Check if today is Tuesday
-        if (currentDay === 2) { // 2 corresponds to Tuesday
-            // Set week-ending date to today if it's Tuesday
-            elements.weekEndingInput.value = today.toISOString().split('T')[0];
-            adjustToWednesday(today); // Adjust to the next Wednesday
-            console.log('Adjusted week-ending date for Tuesday:', today);
-            
-            // Update the date7 field
-            const date7 = new Date(today);
-            date7.setDate(today.getDate() + 6);
-            elements.timeEntryForm.elements['date7'].value = date7.toISOString().split('T')[0];
-    
-            // Populate the week dates
-            populateWeekDates(today);
-        } else {
-            // Handle the change if it's not Tuesday
-            const selectedDate = new Date(elements.weekEndingInput.value);
-            adjustToWednesday(selectedDate);
-            elements.weekEndingInput.value = selectedDate.toISOString().split('T')[0];
-            console.log('Adjusted week-ending date:', selectedDate);
-        
-            const date7 = new Date(selectedDate);
-            date7.setDate(selectedDate.getDate() + 6);
-            elements.timeEntryForm.elements['date7'].value = date7.toISOString().split('T')[0];
-            populateWeekDates(selectedDate);
-        }
-        
+        const date7 = new Date(nextTuesday);
+        date7.setDate(nextTuesday.getDate() + 6);
+        elements.timeEntryForm.elements['date7'].value = date7.toISOString().split('T')[0];
+        populateWeekDates(nextTuesday);
         saveFormData();
     }
     
-    function adjustToWednesday(date) {
-        const dayOfWeek = date.getDay();
-        const offset = (3 - dayOfWeek + 7) % 7; // Adjust to the next Wednesday
-        date.setDate(date.getDate() + offset);
+    
+    function getNextTuesday(referenceDate = new Date()) {
+        const dayOfWeek = referenceDate.getDay(); // 0 is Sunday, 1 is Monday, ..., 6 is Saturday
+     
+        // Calculate the number of days until next Tuesday
+        // If today is Tuesday, it should be the next Tuesday, not today
+        const daysUntilTuesday = (2 - dayOfWeek + 6) % 7 || 7;
+     
+        // Create a new date object for next Tuesday
+        const nextTuesday = new Date(referenceDate);
+        nextTuesday.setDate(referenceDate.getDate() + daysUntilTuesday);
+     
+        return nextTuesday;
     }
+    
+    
+    console.log(getNextTuesday());
+    
+    async function initializeForm() {
+        console.log('Initializing form...');
+        const nextTuesday = getNextTuesday(); // Get the next Tuesday
+        elements.weekEndingInput.value = nextTuesday.toISOString().split('T')[0];
+        handleWeekEndingChange(); // Update other fields based on this date
+    }
+    
     
     function populateWeekDates(weekEndingDate) {
         const daysOfWeek = ['date1', 'date2', 'date3', 'date4', 'date5', 'date6', 'date7'];
@@ -405,7 +402,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         });
         saveFormData();
     }
-    
 
     function hideApprovalOnEdit(isApproved) {
         const inputs = document.querySelectorAll('input, textarea, select');
@@ -602,12 +598,13 @@ document.addEventListener("DOMContentLoaded", async function () {
     async function updatePtoHours() {
         console.log('Updating PTO hours...');
         const usedPtoHoursValue = parseFloat(elements.ptoTimeSpan.textContent) || 0;
+        console.log('Total PTO hours:', usedPtoHoursValue);
     
         const endpoint = `https://api.airtable.com/v0/${baseId}/${tableId}/${recordId}`;
         console.log('Endpoint for update:', endpoint);
     
         try {
-            // Fetch the current PTO value
+            // Step 1: Fetch the current value of PTO from Airtable
             const fetchResponse = await fetch(endpoint, {
                 method: 'GET',
                 headers: {
@@ -619,22 +616,26 @@ document.addEventListener("DOMContentLoaded", async function () {
             if (!fetchResponse.ok) throw new Error(`Failed to fetch current PTO hours: ${fetchResponse.statusText}`);
     
             const fetchData = await fetchResponse.json();
-            const currentPtoHours = parseFloat(fetchData.fields['PTO']) || 0;
+            console.log('Fetched data:', fetchData);
+            
+            // Fetch and parse the current PTO hours
+            const currentPtoHours = parseFloat(fetchData.fields['PTO']);
+            console.log('Current PTO hours fetched from Airtable:', currentPtoHours);
     
-            // Calculate new PTO value by adding the used PTO hours
+            if (isNaN(currentPtoHours)) throw new Error(`Invalid PTO hours value retrieved from Airtable: ${fetchData.fields['PTO']}`);
+    
+            // Step 2: Add the used PTO hours value to the current PTO hours
             const newPtoHoursValue = currentPtoHours + usedPtoHoursValue;
-            console.log('Current PTO hours:', currentPtoHours);
-            console.log('Used PTO hours value:', usedPtoHoursValue);
-            console.log('New PTO hours value:', newPtoHoursValue);
+            console.log('New PTO hours value to update:', newPtoHoursValue);
     
-            // Update the PTO field with the new value
+            // Step 3: Patch the updated total back to Airtable
             const updateResponse = await fetch(endpoint, {
                 method: 'PATCH',
                 headers: {
                     Authorization: `Bearer ${apiKey}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ fields: { 'PTO': newPtoHoursValue } })
+                body: JSON.stringify({ fields: { 'PTO': newPtoHoursValue } })  // Send the new total as a number
             });
     
             const updateResponseData = await updateResponse.json();
@@ -647,6 +648,11 @@ document.addEventListener("DOMContentLoaded", async function () {
             throw new Error('Failed to update PTO hours. Error: ' + error.message);
         }
     }
+    
+    
+    
+    
+    
     
 
     async function updatePersonalHours() {
@@ -684,7 +690,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         console.log('User clicked submit. Throwing confetti!');
         
         // Trigger confetti immediately when the user clicks submit
-        throwConfetti();
         
         const totalPtoHours = parseFloat(elements.ptoTimeSpan.textContent) || 0;
         const totalPersonalHours = parseFloat(elements.personalTimeSpan.textContent) || 0;
@@ -704,10 +709,29 @@ document.addEventListener("DOMContentLoaded", async function () {
             await updatePersonalHours();
             await sendDataToAirtable();
             showModal(); // Show the success modal after successful submission
+            throwConfetti();
+
+             // Refresh the page after 2 seconds
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
         } catch (error) {
-            alert(`Submission failed: ${error.message}`);
+            // Extracting detailed error information
+            const errorMessage = error.message || 'Unknown error';
+            const errorName = error.name || 'Error';
+            const errorStack = error.stack || 'No stack trace available';
+            
+            // Log detailed error information to the console
+            console.error(`Error Name: ${errorName}`);
+            console.error(`Error Message: ${errorMessage}`);
+            console.error(`Error Stack: ${errorStack}`);
+            
+            // Show a detailed alert to the user
+            alert(`An error occurred while submitting your data. Please try again.\n\nError Details:\n- Name: ${errorName}\n- Message: ${errorMessage}\n- See console for more details.`);
         }
     }
+    
+    
     
     function throwConfetti() {
         confetti({
@@ -719,38 +743,44 @@ document.addEventListener("DOMContentLoaded", async function () {
     
     function showModal() {
         const modal = document.getElementById('successModal');
-        const closeButton = modal.querySelector('.close-button');
-        
-        // Ensure there is only one countdown element
-        let countdownElement = modal.querySelector('.countdown');
-        if (!countdownElement) {
-            countdownElement = document.createElement('p');
-            countdownElement.className = 'countdown';
-            modal.querySelector('.modal-content').appendChild(countdownElement);
+        if (!modal) {
+            console.error('Modal element not found');
+            return;
         }
-        
+    
+        const closeButton = modal.querySelector('.close-button');
+        if (!closeButton) {
+            console.error('Close button not found');
+            return;
+        }
+    
+        const countdownElement = document.createElement('p');
         let countdown = 25;
-        
+    
         // Display the modal
         modal.style.display = 'block';
-        
+    
+        // Add the countdown element to the modal
+        countdownElement.textContent = `This modal will close in ${countdown} seconds.`;
+        modal.querySelector('.modal-content').appendChild(countdownElement);
+    
         // Start the countdown
         const countdownInterval = setInterval(() => {
             countdown -= 1;
             countdownElement.textContent = `Close in ${countdown} seconds.`;
-        
+    
             if (countdown <= 0) {
                 clearInterval(countdownInterval);
                 modal.style.display = 'none'; // Automatically close the modal
             }
         }, 1000);
-        
+    
         // Close the modal when the user clicks the close button
         closeButton.onclick = function() {
             clearInterval(countdownInterval); // Stop the countdown
             modal.style.display = 'none';
         };
-        
+    
         // Close the modal when the user clicks anywhere outside of it
         window.onclick = function(event) {
             if (event.target === modal) {
@@ -759,6 +789,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
         };
     }
+    
     
     
     
@@ -790,7 +821,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 body: JSON.stringify({
                     fields: {
                         "date7": date7 || '0',
-                        "PTO": parseFloat(totalPtoHours) || 0,
+                        "PTO Time Used": parseFloat(totalPtoHours) || 0,
                         "Personal Time Used": parseFloat(totalPersonalHours) || 0,
                         "Holiday Hours Used": parseFloat(totalHolidayHours) || 0,
                         "Total Hours Worked": parseFloat(elements.totalTimeWorkedSpan.textContent) || 0,
@@ -911,13 +942,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         }, 100);
     }
 
-    async function initializeForm() {
-        console.log('Initializing form...');
-        const today = new Date();
-        adjustToWednesday(today);
-        elements.weekEndingInput.value = today.toISOString().split('T')[0];
-        handleWeekEndingChange();
-    }
+
 
     const convertToCsvButton = document.getElementById('convert-to-csv-button');
 
@@ -987,10 +1012,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             'richard.mcgirt@vanirinstalledsales.com',
             'hunter@vanirinstalledsales.com',
             'katy@vanirinstalledsales.com',
-            'diana.smith@vanirinstalledsales.com',
-            'brittany.godwin@vanirinstalledsales.com',
-            'martha.favilabeltran@vanirinstalledsales.com'
-
+            'diana.smith@vanirinstalledsales.com'
         ];
         return !excludedEmails.includes(email);
     }
